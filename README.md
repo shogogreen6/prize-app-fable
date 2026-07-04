@@ -24,21 +24,32 @@ npm test          # スクレイパーのユニットテスト（実レスポン
 
 「アニメ管理」から作品を登録 →「今すぐ更新」でプライズが収集されます。
 
-## デプロイ（Vercel + Turso）
+## デプロイ
 
-DBはSQLite互換の [Turso](https://turso.tech)（無料枠あり）を使う。
+Vercel専用の機能（Edge Runtime・`maxDuration`指定など）は使っていないので、**Vercel / Render どちらでも公開できる**。DBはSQLite互換の [Turso](https://turso.tech)（無料枠あり）を使う。
 
-1. Turso で DB を作成し、URL とトークンを取得
-   ```bash
-   turso db create prize-watch
-   turso db show prize-watch --url
-   turso db tokens create prize-watch
-   ```
-2. 本番DBにスキーマを反映
-   ```bash
-   TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... npm run db:push
-   ```
-3. Vercel にデプロイし、環境変数 `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` を設定
+### 1. Turso で本番DBを用意（共通）
+
+```bash
+turso db create prize-watch
+turso db show prize-watch --url
+turso db tokens create prize-watch
+TURSO_DATABASE_URL=libsql://... TURSO_AUTH_TOKEN=... npm run db:push
+```
+
+### 2-A. Vercelにデプロイする場合
+
+Vercelにリポジトリを接続し、環境変数 `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` を設定するだけ。ビルド/起動コマンドはNext.jsのデフォルトのまま。
+
+### 2-B. Renderにデプロイする場合
+
+リポジトリ直下の `render.yaml`（Blueprint）を使えば設定済み：
+
+1. Render ダッシュボードで「New +」→「Blueprint」→ このリポジトリを選択
+2. `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` を入力してデプロイ
+   - Blueprintを使わず手動で Web Service を作る場合は Build Command `npm ci && npm run build`、Start Command `npm run start` を指定
+
+無料プランはNode常時起動ではなく15分アイドルでスリープし、次のアクセス時に再起動（数十秒のコールドスタート）する点に注意。永続ディスクが使える有料プラン（Starter以上）なら、Tursoの代わりにディスク上のSQLiteファイルを直接使う構成も可能（`TURSO_DATABASE_URL`を設定せず`file:`パスをディスクのマウント先に向けるだけ）。
 
 ## 仕組み（データ取得）
 

@@ -64,7 +64,7 @@ export function parseSegaDate(raw: string): ParsedDate {
   return { iso: toIso(y, m, d), precision: "day" };
 }
 
-/** JST での今日の日付 (YYYY-MM-DD)。Vercel は UTC で動くため明示的に +9h する */
+/** JST での今日の日付 (YYYY-MM-DD)。ホスティング環境は基本UTCで動くため明示的に +9h する */
 export function todayJst(): string {
   return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
 }
